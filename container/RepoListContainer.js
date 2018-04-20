@@ -1,43 +1,34 @@
 /* @flow */
 
 import * as React from "react";
+import { connect } from "react-redux";
 
 import RepoList from "../components/RepoList";
 
 type Props = {
-  username: string
-};
-
-type State = {
-  repos: Array<any>
+  username: string,
+  repos: Array<any>,
+  fetchRepos: (username: string) => void
 };
 
 class RepoListContainer extends React.Component<Props, State> {
-  state = { repos: [] };
-
   componentWillMount() {
-    fetch(`https://api.github.com/users/${this.props.username}/starred`)
-      .then(response => response.json())
-      .then(repoData =>
-        repoData.map(
-          ({ name, owner, description, stargazers_count, language }) => ({
-            name,
-            description,
-            language,
-            owner: owner.login,
-            numberOfStars: stargazers_count
-          })
-        )
-      )
-      .then(repos => {
-        this.setState({ repos });
-      });
+    this.props.fetchRepos(this.props.username);
   }
 
   render() {
-    // this.props.repos from redux!
-    return <RepoList repos={this.state.repos} />;
+    return <RepoList repos={this.props.repos} />;
   }
 }
 
-export default RepoListContainer;
+const mapStateToProps = state => ({
+  repos: state.repos.repos
+});
+
+const mapDispatchToProps = dispatch => ({
+  fetchRepos: username => {
+    return dispatch({ type: "FETCH_REPOS", username });
+  }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(RepoListContainer);
